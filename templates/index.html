@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paper Finder</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <header class="heading"><div class="brand">P<span>F</span></div><div><p class="kicker">OPEN RESEARCH DISCOVERY</p><h1>Paper Finder</h1><p class="subhead">Search across scholarly sources in one place.</p></div></header>
+    <form class="search" method="get" action="/">
+      <label class="sr-only" for="q">Research topic</label>
+      <input id="q" type="search" name="q" value="{{ query }}" placeholder="Try “climate modeling” or “large language models”" required>
+      <fieldset><legend>Sources</legend>
+        <label><input type="checkbox" name="source" value="arxiv" {% if 'arxiv' in sources %}checked{% endif %}> arXiv</label>
+        <label><input type="checkbox" name="source" value="openalex" {% if 'openalex' in sources %}checked{% endif %}> OpenAlex</label>
+      </fieldset>
+      <button type="submit">Search papers <span aria-hidden="true">↗</span></button>
+    </form>
+    {% if query %}
+      <section class="results" aria-live="polite">
+        <div class="result-heading"><div><p class="kicker">SEARCH RESULTS</p><h2>“{{ query }}”</h2></div><span class="count">{{ papers|length }} papers · page {{ page }}</span></div>
+        {% if errors %}<div class="notice">{% for error in errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+        {% if papers %}
+          <div class="table-scroll"><table>
+            <thead><tr><th>Paper</th><th>Authors</th><th>Year</th><th>Source</th><th>PDF</th></tr></thead>
+            <tbody>{% for paper in papers %}<tr>
+              <td class="paper-title"><a href="{{ paper.url }}" target="_blank" rel="noopener noreferrer">{{ paper.title }} <span aria-hidden="true">↗</span></a>{% if paper.abstract %}<details><summary>Abstract</summary><p>{{ paper.abstract }}</p></details>{% endif %}</td>
+              <td class="authors">{{ paper.authors or '—' }}</td><td>{{ paper.year or '—' }}</td>
+              <td><span class="source">{{ paper.source }}</span></td>
+              <td>{% if paper.pdf_url %}<a class="pdf" href="{{ paper.pdf_url }}" target="_blank" rel="noopener noreferrer">View PDF ↗</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+            </tr>{% endfor %}</tbody>
+          </table></div>
+          <nav class="pagination" aria-label="Search results pages">
+            {% if page > 1 %}<a href="{{ url_for('index', q=query, source=sources, page=page - 1) }}">← Previous</a>{% else %}<span></span>{% endif %}
+            <span class="page">Page {{ page }}</span>
+            {% if has_next %}<a class="next" href="{{ url_for('index', q=query, source=sources, page=page + 1) }}">Next →</a>{% else %}<span></span>{% endif %}
+          </nav>
+        {% elif not errors %}<div class="empty"><strong>No papers found on this page.</strong><p>Try another topic or check the selected sources.</p></div>{% endif %}
+      </section>
+    {% else %}
+      <section class="welcome"><span class="spark">✳</span><div><h2>Start with a research topic</h2><p>Results include publication details, abstracts, source links, and available PDFs.</p></div></section>
+    {% endif %}
+    <footer>Paper Finder <span>Sample project · arXiv + OpenAlex</span></footer>
+  </main>
+</body>
+</html>
